@@ -203,3 +203,66 @@ char *pos = strstr("hello mundo", "mundo");
 A dica mais importante de prova é sobre o strcmp — nunca compare strings com ==:
 if (s1 == s2)          // ❌ compara endereços, não conteúdo!
 if (strcmp(s1,s2)==0)  // ✅ compara o conteúdo de verdade
+
+================================================================================================================================
+Struct — agrupa dados relacionados
+Quando você quer representar uma coisa que tem várias características:
+ctypedef struct {
+    char nome[50];
+    int idade;
+    float altura;
+} Pessoa;
+
+Pessoa p;
+strcpy(p.nome, "João");
+p.idade = 20;
+p.altura = 1.75;
+Cada campo tem seu próprio espaço na memória:
+Pessoa:
+[ nome(50 bytes) | idade(4 bytes) | altura(4 bytes) ]
+Usa quando os dados são diferentes mas relacionados — como os campos de um cadastro.
+
+------------------------------------------------------------------------------------------------------------------------------------
+Union — vários nomes para o mesmo espaço
+Todos os campos compartilham a mesma memória. Só um campo pode ser usado por vez:
+ctypedef union {
+    char a[4];
+    int b;
+} Teste;
+
+Teste t;
+t.b = 65;           // escreve como int
+printf("%c", t.a[0]); // lê como char → imprime 'A'
+Na memória:
+[ mesmo espaço de 4 bytes ]
+  ↑           ↑
+  t.a[0..3]   t.b
+  (lê como char) (lê como int)
+O tamanho da union é o tamanho do maior membro. Usa quando você quer interpretar os mesmos bytes de formas diferentes.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Enum — lista de valores com nome
+Quando você tem um conjunto fixo de opções e quer dar nomes a elas:
+ctypedef enum {
+    SEGUNDA,   // vale 0
+    TERCA,     // vale 1
+    QUARTA,    // vale 2
+    QUINTA,    // vale 3
+    SEXTA      // vale 4
+} DiaSemana;
+
+DiaSemana hoje = QUARTA;
+
+if (hoje == QUARTA)
+    printf("meio da semana!");
+Sem enum você usaria números mágicos no código:
+cif (hoje == 2)   // ❌ o que significa 2?
+if (hoje == QUARTA)  // ✅ muito mais claro!
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Comparando os três:
+                Struct                     Union                       Enum
+Memória      cada campo tem a sua    todos compartilham          é só um int por baixo
+
+Uso         agrupar dados            interpretar mesmos bytes      nomear opções fixas
+                                    de formas diferentes
+
+Exemplo     cadastro de pessoa      converter int pra bytes         dias da semana, estados                                
