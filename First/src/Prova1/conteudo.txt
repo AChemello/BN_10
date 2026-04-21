@@ -1,0 +1,205 @@
+O que é um ponteiro?
+Um ponteiro é uma variável que armazena um endereço de memória.
+
+int x = 10;
+int *p = &x;  // p guarda o endereço de x
+
+printf("%d", x);   // 10  → valor de x
+printf("%p", p);   // 0x... → endereço de x
+printf("%d", *p);  // 10  → valor apontado por p (derreferência)
+
+&x → "endereço de x"
+*p → "valor no endereço p" (derreferência)
+
+int *p → "p é ponteiro para int"
+
+Dica de prova: &x = endereço de x. *p = conteúdo do endereço p. São operadores inversos!
+---------------------------------------------------------------------------------------------------------
+Ponteiro e arrays
+Arrays e ponteiros são intimamente ligados em C:
+
+int v[] = {10, 20, 30};
+int *p = v;  // p aponta pro primeiro elemento
+
+printf("%d", *p);      // 10
+printf("%d", *(p+1));  // 20
+printf("%d", *(p+2));  // 30
+p + 1 não soma 1 byte — soma 1 × sizeof(int) bytes. Isso é aritmética de ponteiros.
+-----------------------------------------------------------------------------------------------------------
+Ponteiro para ponteiro
+
+int x = 5;
+int *p = &x;
+int **pp = &p;  // ponteiro para ponteiro
+
+printf("%d", **pp);  // 5
+Muito usado em funções que precisam modificar um ponteiro, ou em matrizes dinâmicas.
+-------------------------------------------------------------------------------------------------------------
+Passagem por referência
+Em C não existe "passar por referência" nativamente — simula-se com ponteiros:
+
+void dobra(int *n) {
+    *n = *n * 2;
+}
+
+int main() {
+    int x = 5;
+    dobra(&x);
+    printf("%d", x);  // 10
+}
+Sem o *, a função receberia uma cópia e x não mudaria.
+
+Se você precisa devolver uma "sequência" ou "posição" → usa *
+Se você precisa devolver um valor único → sem *
+
+char f();
+// retorna 1 caractere
+// ex: 'a', 'b', '\0'
+
+char* f();
+// retorna endereço
+// → aponta pra string
+
+minha_strstr retorna char* pois devolve onde a substring começa dentro da string original — não um char isolado.
+
+*ptr++ vs (*ptr)++
+
+*ptr++ mais comum
+// Acessa *ptr, DEPOIS avança ptr
+// ponteiro anda pra frente
+*ptr++
+
+(*ptr)++
+// Incrementa o VALOR
+// ponteiro NÃO se move
+(*ptr)++
+
+void copia(int v[], int vet2[], int tam) {
+    for (int i = 0; i < tam; i++) {
+        *vet2 = *v;   // copia elemento atual
+        vet2++;        // avança ponteiro destino
+        v++;           // avança ponteiro origem
+    }
+}
+
+int v[] = {10, 20, 30, 40, 50};
+int *p = v;  // p aponta pro primeiro elemento
+
+// Formas EQUIVALENTES de acessar:
+v[2]    == *(v + 2)   // ✅
+p[2]    == *(p + 2)   // ✅
+*(p+0)  == p[0] == 10
+*(p+1)  == p[1] == 20
+*(p+2)  == p[2] == 30
+---------------------------------------------------------------------------------------
+char* vs char[] — diferença crítica
+char *frase1 = "literal";      // LITERAL — não pode modificar!
+char frase2[] = "array";       // ARRAY — pode modificar ✅
+char frase3[30] = "array";     // ARRAY com tamanho fixo ✅
+
+frase2[0] = 'A';  // ✅ ok
+frase1[0] = 'A';  // ❌ comportamento indefinido! (segfault)
+Literal fica na memória de leitura. Array fica na stack e pode ser modificado.
+----------------------------------------------------------------------------------
+Dois ponteiros caminhando — padrão clássico
+pt1 do início, pt2 do fim:
+int eh_palindromo(char* str) {
+    char *pt1 = str;
+    char *pt2 = str;
+    while (*pt2 != '\0') pt2++;  // pt2 vai pro final
+    pt2--;                        // volta do '\0'
+
+    while (pt1 < pt2) {  // enquanto não se cruzaram
+        if (*pt1 != *pt2) return 0;
+        pt1++;  // avança do início
+        pt2--;  // recua do fim
+    }
+    return 1;
+}
+Esse padrão (dois ponteiros opostos) aparece em: palíndromo, inversão, remoção de duplicatas.
+----------------------------------------------------------------------------------------------
+ptr1 lê, ptr2 escreve — dois ponteiros na mesma string:
+
+void remove_espacos_extras(char* str) {
+    char *ptr1 = str;   // lê
+    char *ptr2 = str;   // escreve
+    int espaco = 0;
+    while (*ptr1 != '\0') {
+        if (*ptr1 != ' ') {
+            *ptr2 = *ptr1;  // copia char normal
+            ptr2++;
+            espaco = 0;
+        } else if (espaco == 0) {
+            *ptr2 = *ptr1;  // copia só 1º espaço
+            ptr2++;
+            espaco = 1;     // bloqueia próximos espaços
+        }
+        ptr1++;
+    }
+    *ptr2 = '\0';  // termina a string!
+}
+Nunca esqueça de colocar o '\0' no final ao modificar strings com ponteiro!
+
+-------------------------------------------------------------------------------------
+char *p1, *p2;      Declara dois ponteiros para char. Ainda não apontam pra nada — só estão sendo criados.
+
+p1 = string;     string já é um ponteiro (parâmetro char*), então não precisa de &. p1 passa a apontar pro primeiro caractere da string.
+string: [ 'm' 'i' 'n' 'h' 'a' '\0' ]
+          ↑
+          p1 aponta aqui
+
+while (*p1) decompor:
+
+*p1 derreferencia o ponteiro — pega o caractere atual
+em C, qualquer valor diferente de 0 é considerado true
+o caractere '\0' que termina toda string tem valor numérico 0 — ou seja, é false
+
+Então o loop continua enquanto o caractere atual não for o fim da string. É equivalente a escrever:
+while (*p1 != '\0')   // forma explícita
+----------------------------------------------------------------------------------------------------------------------------------------------
+char str[] = "hello";
+int tam = strlen(str);
+char *p = str + tam - 1;
+str é o endereço do primeiro caractere da string:
+tam é o resultado do strlen — no caso 5. Então str + tam anda 5 posições a partir do início:
+Caiu exatamente no '\0' — o fim da string. Mas não queremos o '\0', queremos o último caractere de verdade!
+Por isso o - 1 — volta uma posição:
+
+----------------------------------------------------------------------------------------------------------------------------------------------
+#include <string.h>
+
+strlen — tamanho da string
+strlen("hello");   // retorna 5 (não conta o '\0')
+
+strcpy — copia uma string em outra
+char dest[20];
+strcpy(dest, "hello");   // dest vira "hello"
+
+// CUIDADO — não verifica se cabe!
+// mais seguro:
+strncpy(dest, "hello", 20);  // limita o tamanho
+
+strcat — concatena (gruda) duas strings
+char s1[20] = "hello ";
+char s2[] = "mundo";
+strcat(s1, s2);   // s1 vira "hello mundo"
+
+// CUIDADO — s1 precisa ter espaço suficiente!
+
+strcmp — compara duas strings
+strcmp("abc", "abc");   //  0 → iguais
+strcmp("abc", "xyz");   // <0 → abc vem antes
+strcmp("xyz", "abc");   // >0 → xyz vem depois
+
+// uso correto em prova:
+if (strcmp(s1, s2) == 0)
+    printf("iguais!");
+
+strstr — busca substring
+char *pos = strstr("hello mundo", "mundo");
+// pos aponta pra "mundo" dentro da string original
+// retorna NULL se não achar
+
+A dica mais importante de prova é sobre o strcmp — nunca compare strings com ==:
+if (s1 == s2)          // ❌ compara endereços, não conteúdo!
+if (strcmp(s1,s2)==0)  // ✅ compara o conteúdo de verdade
